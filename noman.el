@@ -38,6 +38,7 @@
   '(("aws"      . noman--make-aws-button)
     ("npm"      . noman--make-npm-button)
     ("go"       . noman--make-go-button)
+    ("cargo"    . noman--make-cargo-button)
     ("perlbrew" . noman--make-perlbrew-button))
   "Alist of form: ((COMMAND . PARSER)).
 COMMAND is a string matched against the requested command.
@@ -63,6 +64,7 @@ If set, this value will used when displaying help for shell built-in commands."
 (defcustom noman-help-format
   '(("npm" (command "help" args))
     ("go" (command "help" args))
+    ("cargo" (command "help" args))
     ("perlbrew" (command "help" args)))
   "Control how help is called for subcommands.
 COMMAND is replaced with the main command.
@@ -145,6 +147,13 @@ SUBCOMMAND-P is non-nil when parsing a subcommand."
 SUBCOMMAND-P is non-nil when parsing a subcommand."
   (unless subcommand-p
     (when (looking-at "^ \\{8\\}\\([a-z-]+\\)")
+      (list (cons (match-beginning 1) (match-end 1))))))
+
+(defun noman--make-cargo-button (&optional subcommand-p)
+  "Return buttons for cargo subcommands.
+SUBCOMMAND-P is non-nil when parsing a subcommand."
+  (unless subcommand-p
+    (when (looking-at "^ \\{4\\}\\([a-z]+\\)")
       (list (cons (match-beginning 1) (match-end 1))))))
 
 (defun noman--button (&rest _)
