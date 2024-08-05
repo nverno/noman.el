@@ -39,7 +39,8 @@
     ("npm"      . noman--make-npm-button)
     ("go"       . noman--make-go-button)
     ("cargo"    . noman--make-cargo-button)
-    ("perlbrew" . noman--make-perlbrew-button))
+    ("perlbrew" . noman--make-perlbrew-button)
+    ("clib"     . noman--make-cargo-button))
   "Alist of form: ((COMMAND . PARSER)).
 COMMAND is a string matched against the requested command.
 PARSER  is a function which accepts a line of text and returns a button or nil."
@@ -65,6 +66,7 @@ If set, this value will used when displaying help for shell built-in commands."
   '(("npm" (command "help" args))
     ("go" (command "help" args))
     ("cargo" (command "help" args))
+    ("clib" (command "help" args))
     ("perlbrew" (command "help" args)))
   "Control how help is called for subcommands.
 COMMAND is replaced with the main command.
