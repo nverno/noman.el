@@ -159,8 +159,10 @@ SUBCOMMAND-P is non-nil when parsing a subcommand."
   (unless subcommand-p
     (when (looking-at "^Commands:")
       (let (res)
-        (while (re-search-forward "^ \\{3\\}\\([a-z]+\\)" nil t)
-          (push (cons (match-beginning 1) (match-end 1)) res))
+        (while (and (zerop (forward-line 1))
+                    (not (looking-at-p "^\\S-")))
+          (when (looking-at "^ \\{3\\}\\([a-z_]+\\)")
+            (push (cons (match-beginning 1) (match-end 1)) res)))
         res))))
 
 (defun noman--button (&rest _)
@@ -202,10 +204,26 @@ Return list of created buttons."
   "TAB" #'forward-button
   "<backtab>" #'backward-button)
 
+(defvar noman-mode-font-lock-keywords
+  `(("^\\([A-Z][A-Za-z]+\\):"
+     (1 '(t :inherit font-lock-function-name-face 'outline-1)))
+    ("^[A-Z][A-Z0-9 ]+$"
+     (0 '(t :inherit font-lock-function-name-face 'outline-1)))
+    ("<\\([^>\n]+\\)>"
+     (1 '(t :inherit font-lock-variable-use-face :slant italic)))
+    ("^\\s-+\\([+-]+[a-zA-Z0-9-]+\\)\\(?:,\\s-+\\([+-]+[a-zA-Z0-9-]+\\)?\\)?"
+     (1 'font-lock-property-name-face)
+     (2 'font-lock-property-name-face nil t)))
+  "Font-locking for `noman-mode'.")
+
 (define-derived-mode noman-mode special-mode "noman"
   "Major mode for browsing command line help.
 
-\\{noman-mode-map}")
+\\{noman-mode-map}"
+  (setq-local font-lock-defaults '(noman-mode-font-lock-keywords))
+  (setq-local imenu-generic-expression
+              '((nil "^\\([A-Z][A-Z0-9 ]+\\)$" 1)
+                (nil "^\\([A-Z][[:alnum:]]+\\):" 1))))
 
 (defun noman--generate-buffer-name (cmd)
   "Generate a buffer name from CMD.
