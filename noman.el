@@ -40,7 +40,8 @@
     ("go"       . noman--make-go-button)
     ("cargo"    . noman--make-cargo-button)
     ("perlbrew" . noman--make-perlbrew-button)
-    ("clib"     . noman--make-cargo-button))
+    ("clib"     . noman--make-cargo-button)
+    ("luarocks" . noman--make-luarocks-button))
   "Alist of form: ((COMMAND . PARSER)).
 COMMAND is a string matched against the requested command.
 PARSER  is a function which accepts a line of text and returns a button or nil."
@@ -67,7 +68,8 @@ If set, this value will used when displaying help for shell built-in commands."
     ("go" (command "help" args))
     ("cargo" (command "help" args))
     ("clib" (command "help" args))
-    ("perlbrew" (command "help" args)))
+    ("perlbrew" (command "help" args))
+    ("luarocks" (command "help" args)))
   "Control how help is called for subcommands.
 COMMAND is replaced with the main command.
 ARGS is replaced with arguments for subcommand help.
@@ -84,20 +86,13 @@ Strings are interpreted as is."
 (defun noman-menu (subcommand)
   "Choose the SUBCOMMAND to view help for."
   (interactive
-   (list
-    (completing-read
-     "Sub-command: "
-     (or (mapcar #'button-label noman--buttons)
-         (user-error "No subcommands found")))))
+   (list (completing-read
+           "Sub-command: " (or (mapcar #'button-label noman--buttons)
+                               (user-error "No subcommands found")))))
   (when-let ((button
-	      (cl-loop
-               for b in noman--buttons
-               thereis
-	       (when
-		   (string=
-		    subcommand
-		    (button-label b))
-		 b))))
+              (cl-loop for b in noman--buttons
+                       when (string= subcommand (button-label b))
+		       return b)))
     (button-activate button)))
 
 (defun noman-back ()
@@ -158,6 +153,16 @@ SUBCOMMAND-P is non-nil when parsing a subcommand."
     (when (looking-at "^ \\{4\\}\\([a-z]+\\)")
       (list (cons (match-beginning 1) (match-end 1))))))
 
+(defun noman--make-luarocks-button (&optional subcommand-p)
+  "Return buttons for luarocks subcommands.
+SUBCOMMAND-P is non-nil when parsing a subcommand."
+  (unless subcommand-p
+    (when (looking-at "^Commands:")
+      (let (res)
+        (while (re-search-forward "^ \\{3\\}\\([a-z]+\\)" nil t)
+          (push (cons (match-beginning 1) (match-end 1)) res))
+        res))))
+
 (defun noman--button (&rest _)
   "Return default command LINE button."
   (when (looking-at "^  \\([A-Za-z]+[A-Za-z0-9\\-]+\\):* \\{2\\}.*$")
@@ -165,9 +170,8 @@ SUBCOMMAND-P is non-nil when parsing a subcommand."
 
 (defun noman--button-func (cmd)
   "Gets the function to use for parsing subcommands for the given CMD."
-  (alist-get
-   (car (split-string cmd " " 'omit-nulls))
-   noman-parsing-functions #'noman--button nil #'string=))
+  (alist-get (car (split-string cmd " " 'omit-nulls))
+             noman-parsing-functions #'noman--button nil #'string=))
 
 (defun noman--buttonize (cmd)
   "Evaluate CMD's button function on each line in `current-buffer'.
