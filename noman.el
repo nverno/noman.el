@@ -89,10 +89,10 @@ Strings are interpreted as is."
    (list (completing-read
            "Sub-command: " (or (mapcar #'button-label noman--buttons)
                                (user-error "No subcommands found")))))
-  (when-let ((button
-              (cl-loop for b in noman--buttons
-                       when (string= subcommand (button-label b))
-		       return b)))
+  (when-let* ((button
+               (cl-loop for b in noman--buttons
+                        when (string= subcommand (button-label b))
+		        return b)))
     (button-activate button)))
 
 (defun noman-back ()
@@ -184,7 +184,7 @@ Return list of created buttons."
     (save-excursion
       (goto-char (point-min))
       (while (not (eobp))
-        (when-let ((btns (funcall button-func subcommand-p)))
+        (when-let* ((btns (funcall button-func subcommand-p)))
           (or (listp btns) (setq btns (list btns)))
           (dolist (pos btns)
             (push (if (overlayp pos) pos
@@ -234,7 +234,7 @@ If `noman-reuse-buffers' is t, *noman* will always be returned."
 
 (defun noman--build-help-command (cmd &optional args)
   "Build help command for CMD with ARGS."
-  (if-let ((order (car (assoc-default cmd noman-help-format))))
+  (if-let* ((order (car (assoc-default cmd noman-help-format))))
       (delq nil (mapcan (lambda (arg)
                           (pcase arg
                             ((pred stringp) (list arg))
@@ -288,16 +288,16 @@ Swaps \"help\" for \"--help\" and vice versa."
        (t (let ((args (noman--build-help-command prefix (cdr tokens))))
             (noman--call-help-commands args)
             (replace-regexp-in-region "." "" (point-min) (point-max)))
-          (when-let ((versioninfo
-                      (save-excursion
-                        (with-temp-buffer
-                          (unless (= (call-process prefix nil t nil  "--version") 0)
-                            (erase-buffer)
-                            (call-process prefix nil t nil "version")
-                            (replace-regexp-in-region "." "" (point-min) (point-max)))
-                          (indent-code-rigidly (point-min) (point-max) 4)
-                          (buffer-string))))
-                     (versioninfo-p (not (string-empty-p (string-trim versioninfo)))))
+          (when-let* ((versioninfo
+                       (save-excursion
+                         (with-temp-buffer
+                           (unless (= (call-process prefix nil t nil  "--version") 0)
+                             (erase-buffer)
+                             (call-process prefix nil t nil "version")
+                             (replace-regexp-in-region "." "" (point-min) (point-max)))
+                           (indent-code-rigidly (point-min) (point-max) 4)
+                           (buffer-string))))
+                      (versioninfo-p (not (string-empty-p (string-trim versioninfo)))))
             (goto-char (point-max))
             (insert "\nIMPLEMENTATION\n")
             (insert versioninfo))))
